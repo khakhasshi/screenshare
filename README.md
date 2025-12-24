@@ -4,6 +4,7 @@
 
 ## 功能特性
 
+✓ **自动服务发现** - 使用 mDNS，自动检测局域网内的屏幕共享服务  
 ✓ 实时屏幕捕获和传输  
 ✓ 自适应 JPEG 压缩，减少带宽占用  
 ✓ 支持多客户端同时连接  
@@ -18,7 +19,9 @@ pip install -r requirements.txt
 
 ## 使用方法
 
-### 1. 启动服务器（主机）
+### 自动发现模式（推荐）
+
+#### 1. 启动服务器（主机）
 
 在要共享屏幕的电脑上运行：
 
@@ -26,39 +29,36 @@ pip install -r requirements.txt
 python server.py [port] [quality] [fps]
 ```
 
-参数说明：
-- `port`: 监听端口，默认 5000
-- `quality`: JPEG 压缩质量（1-100），默认 60（推荐 50-80）
-- `fps`: 帧率，默认 10（推荐 5-15）
-
 示例：
 ```bash
-# 默认配置
-python server.py
-
-# 自定义配置：端口 5000，质量 70，帧率 15
-python server.py 5000 70 15
+python server.py                    # 使用默认配置
+python server.py 5000 70 15         # 自定义配置
 ```
 
-### 2. 启动客户端（接收端）
+#### 2. 启动客户端（接收端）
 
 在接收屏幕的电脑上运行：
+
+```bash
+python client.py
+```
+
+客户端会自动扫描局域网并显示可用的屏幕共享服务，选择一个并点击"连接"即可。
+
+---
+
+### 手动连接模式
+
+如果自动发现不工作，可以手动指定服务器地址：
 
 ```bash
 python client.py <server_ip> [port]
 ```
 
-参数说明：
-- `server_ip`: 服务器 IP 地址（局域网 IP）
-- `port`: 服务器端口，默认 5000
-
 示例：
 ```bash
-# 连接到本地服务器
-python client.py localhost
-
-# 连接到局域网服务器（例如 192.168.1.100）
-python client.py 192.168.1.100 5000
+python client.py 192.168.1.100          # 连接到指定 IP
+python client.py 192.168.1.100 5000     # 指定 IP 和端口
 ```
 
 ## 获取服务器 IP 地址
@@ -82,6 +82,13 @@ ipconfig
 | 高带宽（>20 Mbps） | 75-85 | 15-20 | 更高质量的体验 |
 
 ## 架构说明
+ 架构说明
+
+### 服务发现（discovery.py）
+- 使用 mDNS (Multicast DNS) 协议
+- 服务器启动时自动注册到局域网
+- 客户端启动时自动扫描并列出可用服务
+- 支持服务的实时上线/离线检测
 
 ### 服务器（server.py）
 - 使用 PIL 捕获屏幕
@@ -90,6 +97,8 @@ ipconfig
 - 支持多客户端同时连接
 
 ### 客户端（client.py）
+- 使用 Tkinter 构建 GUI
+- 内置服务发现，自动列出局域网内的服务
 - 使用 Tkinter 构建 GUI
 - 接收并解码 JPEG 数据
 - 自动缩放以适应窗口

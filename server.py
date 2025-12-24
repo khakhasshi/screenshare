@@ -9,6 +9,8 @@ import struct
 import io
 from PIL import ImageGrab, Image
 from datetime import datetime
+import platform
+from discovery import ScreenShareDiscovery
 
 class ScreenShareServer:
     def __init__(self, host='0.0.0.0', port=5000, quality=70, fps=10):
@@ -38,8 +40,22 @@ class ScreenShareServer:
         self.server_socket.listen(5)
         
         self.running = True
-        print(f"[✓] 屏幕共享服务器启动: {self.host}:{self.port}")
+        
+        # 获取本机 IP
+        local_ip = self._get_local_ip()
+        hostname = platform.node()
+        
+        print(f"[✓] 屏幕共享服务器启动: {local_ip}:{self.port}")
+        print(f"[i] 主机名: {hostname}")
         print(f"[i] 质量: {self.quality}, 帧率: {self.fps} FPS")
+        
+        # 发布到局域网
+        try:
+            discovery = ScreenShareDiscovery()
+            discovery.register_service(hostname, self.port, self.quality, self.fps)
+        except Exception as e:
+            print(f"[!] 服务发现注册失败: {e}")
+            print("[i] 客户端仍可手动连接")
         
         # 启动屏幕捕获线程
         capture_thread = threading.Thread(target=self._capture_and_broadcast, daemon=True)
@@ -155,6 +171,17 @@ class ScreenShareServer:
             except Exception as e:
                 print(f"[!] 捕获或广播出错: {e}")
                 time.sleep(1)
+    
+    def _get_local_ip(self):
+        """获取本机局域网 IP"""
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+            s.close()
+            return ip
+        except:
+            return "127.0.0.1"
     
     def stop(self):
         """停止服务器"""
