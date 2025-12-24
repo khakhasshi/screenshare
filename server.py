@@ -7,7 +7,7 @@ import time
 import threading
 import struct
 import io
-from PIL import ImageGrab
+from PIL import ImageGrab, Image
 from datetime import datetime
 
 class ScreenShareServer:
